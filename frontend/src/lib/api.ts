@@ -4,12 +4,20 @@ const STATIC_BASE = process.env.NEXT_PUBLIC_STATIC_URL || "";
 import type { JobStatus, JobDetail } from "./types";
 
 export async function createJob(url: string): Promise<{ job_id: string; status: string }> {
-  const res = await fetch(`${API_BASE}/jobs`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  if (!res.ok) throw new Error("Failed to create job");
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/jobs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+  } catch {
+    throw new Error("无法连接到后端服务器，请确认后端已启动 (端口 8000)");
+  }
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`服务器返回错误 (${res.status}): ${detail}`);
+  }
   return res.json();
 }
 

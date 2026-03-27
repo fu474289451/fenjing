@@ -17,8 +17,9 @@ export default function Home() {
     try {
       const { job_id } = await createJob(url);
       router.push(`/jobs/${job_id}`);
-    } catch {
-      setError("提交失败，请检查链接是否有效");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "提交失败，请检查链接是否有效";
+      setError(msg);
       setLoading(false);
     }
   };

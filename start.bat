@@ -7,7 +7,7 @@ echo    Fenjing 分镜工具 - 一键启动
 echo ========================================
 echo.
 
-set "ROOT=%~dp0"
+set ROOT=%~dp0
 
 :: Check Python
 python --version >nul 2>&1
@@ -44,18 +44,18 @@ if errorlevel 1 (
 
 :: Install backend dependencies
 echo.
-echo [1/4] 安装后端依赖（首次运行需要几分钟）...
-pip install fastapi uvicorn[standard] pydantic pydantic-settings yt-dlp "scenedetect[opencv]" pillow python-multipart
+echo [1/4] 安装后端依赖...
+pip install fastapi "uvicorn[standard]" pydantic pydantic-settings yt-dlp "scenedetect[opencv]" pillow python-multipart
 if errorlevel 1 (
-    echo [错误] 后端依赖安装失败，请检查上面的错误信息
+    echo [错误] 后端依赖安装失败
     pause
     exit /b 1
 )
 echo       后端依赖安装完成
 
 :: Install frontend dependencies
-echo [2/4] 安装前端依赖（首次运行需要几分钟）...
-cd /d "%ROOT%frontend"
+echo [2/4] 安装前端依赖...
+cd /d %ROOT%frontend
 if not exist node_modules (
     call npm install
     if errorlevel 1 (
@@ -65,24 +65,32 @@ if not exist node_modules (
     )
 )
 echo       前端依赖安装完成
-cd /d "%ROOT%"
 
-:: Start backend in a new visible window
+:: Write temp scripts to avoid nested quote issues
+echo @echo off > %ROOT%_start_backend.bat
+echo cd /d %ROOT%backend >> %ROOT%_start_backend.bat
+echo python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 >> %ROOT%_start_backend.bat
+
+echo @echo off > %ROOT%_start_frontend.bat
+echo cd /d %ROOT%frontend >> %ROOT%_start_frontend.bat
+echo npx next dev -p 3000 >> %ROOT%_start_frontend.bat
+
+:: Start backend
 echo [3/4] 启动后端服务器 (端口 8000)...
-start "Fenjing Backend" cmd /k "cd /d "%ROOT%backend" && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+start "Fenjing Backend" cmd /k %ROOT%_start_backend.bat
 
 :: Wait for backend
 echo       等待后端启动...
 timeout /t 5 /nobreak >nul
 
-:: Start frontend in a new visible window
+:: Start frontend
 echo [4/4] 启动前端服务器 (端口 3000)...
-start "Fenjing Frontend" cmd /k "cd /d "%ROOT%frontend" && npx next dev -p 3000"
+start "Fenjing Frontend" cmd /k %ROOT%_start_frontend.bat
 
-:: Wait for frontend to be ready
+:: Wait for frontend
 echo.
 echo 正在启动前端，请稍候...
-timeout /t 10 /nobreak >nul
+timeout /t 12 /nobreak >nul
 
 :: Open browser
 echo.
