@@ -7,7 +7,8 @@ echo    Fenjing 分镜工具 - 一键启动
 echo ========================================
 echo.
 
-set ROOT=%~dp0
+:: Save the root directory (where this .bat lives)
+set "ROOT=%~dp0"
 
 :: Check Python
 python --version >nul 2>&1
@@ -55,7 +56,7 @@ echo       后端依赖安装完成
 
 :: Install frontend dependencies
 echo [2/4] 安装前端依赖...
-cd /d %ROOT%frontend
+cd /d "%ROOT%frontend"
 if not exist node_modules (
     call npm install
     if errorlevel 1 (
@@ -66,26 +67,20 @@ if not exist node_modules (
 )
 echo       前端依赖安装完成
 
-:: Write temp scripts to avoid nested quote issues
-echo @echo off > %ROOT%_start_backend.bat
-echo cd /d %ROOT%backend >> %ROOT%_start_backend.bat
-echo python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 >> %ROOT%_start_backend.bat
+:: Go back to root
+cd /d "%ROOT%"
 
-echo @echo off > %ROOT%_start_frontend.bat
-echo cd /d %ROOT%frontend >> %ROOT%_start_frontend.bat
-echo npx next dev -p 3000 >> %ROOT%_start_frontend.bat
-
-:: Start backend
+:: Start backend in a new window
 echo [3/4] 启动后端服务器 (端口 8000)...
-start "Fenjing Backend" cmd /k %ROOT%_start_backend.bat
+start "Fenjing Backend" cmd /c "cd /d "%ROOT%backend" & python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 & pause"
 
 :: Wait for backend
 echo       等待后端启动...
 timeout /t 5 /nobreak >nul
 
-:: Start frontend
+:: Start frontend in a new window
 echo [4/4] 启动前端服务器 (端口 3000)...
-start "Fenjing Frontend" cmd /k %ROOT%_start_frontend.bat
+start "Fenjing Frontend" cmd /c "cd /d "%ROOT%frontend" & npx next dev -p 3000 & pause"
 
 :: Wait for frontend
 echo.
