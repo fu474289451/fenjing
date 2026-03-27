@@ -1,5 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-const STATIC_BASE = process.env.NEXT_PUBLIC_STATIC_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+const STATIC_BASE = process.env.NEXT_PUBLIC_STATIC_URL || "";
 
 import type { JobStatus, JobDetail } from "./types";
 
